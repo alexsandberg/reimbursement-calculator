@@ -1,4 +1,5 @@
 from datetime import datetime
+from pandas import DataFrame
 
 class Project:
     def __init__(self, project_number, city_cost, start_date: datetime, end_date: datetime):
@@ -37,3 +38,15 @@ class ProjectSet:
 
     def get_end_date(self):
         return self.end_date
+
+def load_data_to_project_set(data_frame: DataFrame) -> ProjectSet:
+    project_set = ProjectSet()
+    for _, row in data_frame.iterrows():
+        # TODO: error handling
+        project_number = int(row['project_number'])
+        city_cost = row['city_cost']
+        start_date = datetime.strptime(row["start_date"], "%m/%d/%y")
+        end_date = datetime.strptime(row["end_date"], "%m/%d/%y")
+        project = Project(project_number, city_cost, start_date, end_date)
+        project_set.add_project(project)
+    return project_set
