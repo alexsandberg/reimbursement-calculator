@@ -68,7 +68,7 @@ def get_highest_travel_day_rate(set: Set, project_numbers: List[int]) -> int:
     highest_rate = 0
     for project_number in project_numbers:
         project = set.get_project_by_number(project_number)
-        rate = get_full_rate_for_city_type(project.city_cost)
+        rate = get_travel_rate_for_city_type(project.city_cost)
         highest_rate = max(highest_rate, rate)
     return highest_rate     
 
@@ -100,8 +100,9 @@ def calculate_reimbursement(set: Set) -> int:
             continue
 
         number_of_projects = len(projects)
+
+        # date is a gap day
         if number_of_projects == 0:
-            # date is a gap day
             rate_by_day[date] = 0
 
             # if there were any projects yesterday, update rate to be a travel day
@@ -116,6 +117,7 @@ def calculate_reimbursement(set: Set) -> int:
                 # there could be more than one project ending on same day
                 rate_by_day[tomorrow] = get_highest_travel_day_rate(set, projects_by_day[tomorrow])
 
+        # date has a single project
         elif number_of_projects == 1:
             project_number = projects[0]
             project = set.get_project_by_number(project_number)
@@ -127,8 +129,9 @@ def calculate_reimbursement(set: Set) -> int:
                 # it must be a full day
                 rate_by_day[date] = get_full_rate_for_city_type(project.city_cost)
 
+        # date has multiple overlapping projects
         else:
-            # since there's overlap, this is a full day at the highest rate
+            # overlap results in full day at the highest rate
             rate_by_day[date] = get_highest_full_day_rate(set, projects)
 
     for date, rate in rate_by_day.items():
