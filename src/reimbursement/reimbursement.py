@@ -1,5 +1,6 @@
-from datetime import timedelta
-from typing import List
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import List, Dict
 from src.reimbursement.project import ProjectSet
 
 LOW_COST_TRAVEL_RATE = 45
@@ -8,20 +9,31 @@ LOW_COST_FULL_RATE = 75
 HIGH_COST_FULL_RATE = 85
 
 
-def get_travel_rate_for_city_type(city_cost):
-    return LOW_COST_TRAVEL_RATE if city_cost == "low" else HIGH_COST_TRAVEL_RATE
+class CityCost(Enum):
+    HIGH = "high"
+    LOW = "low"
 
 
-def get_full_rate_for_city_type(city_cost):
-    return LOW_COST_FULL_RATE if city_cost == "low" else HIGH_COST_FULL_RATE
+def is_low_cost_city(city_cost: CityCost) -> bool:
+    return city_cost == CityCost.LOW
+
+
+def get_travel_rate_for_city_type(city_cost: CityCost) -> int:
+    return (
+        LOW_COST_TRAVEL_RATE if is_low_cost_city(city_cost) else HIGH_COST_TRAVEL_RATE
+    )
+
+
+def get_full_rate_for_city_type(city_cost: CityCost) -> int:
+    return LOW_COST_FULL_RATE if is_low_cost_city(city_cost) else HIGH_COST_FULL_RATE
 
 
 def get_highest_full_day_rate(
-    projectSet: ProjectSet, project_numbers: List[int]
+    project_set: ProjectSet, project_numbers: List[int]
 ) -> int:
     highest_rate = 0
     for project_number in project_numbers:
-        project = projectSet.get_project_by_number(project_number)
+        project = project_set.get_project_by_number(project_number)
         rate = get_full_rate_for_city_type(project.city_cost)
         highest_rate = max(highest_rate, rate)
     return highest_rate
@@ -29,28 +41,28 @@ def get_highest_full_day_rate(
 
 # repetitive code: refactor to combine with get_highest_full_day_rate
 def get_highest_travel_day_rate(
-    projectSet: ProjectSet, project_numbers: List[int]
+    project_set: ProjectSet, project_numbers: List[int]
 ) -> int:
     highest_rate = 0
     for project_number in project_numbers:
-        project = projectSet.get_project_by_number(project_number)
+        project = project_set.get_project_by_number(project_number)
         rate = get_travel_rate_for_city_type(project.city_cost)
         highest_rate = max(highest_rate, rate)
     return highest_rate
 
 
 # dictionary that maps each day in the set to a list of projects on that day
-def init_projects_by_day_map(projectSet: ProjectSet):
+def init_projects_by_day_map(project_set: ProjectSet) -> Dict[datetime, List[int]]:
     projects_by_day = {}
-    current_date = projectSet.get_start_date()
+    current_date = project_set.get_start_date()
 
     # loop over every day in the set and initialize each with an empty list
-    while current_date <= projectSet.get_end_date():
+    while current_date <= project_set.get_end_date():
         projects_by_day[current_date] = []
         current_date += timedelta(days=1)
 
     # mark each day with project numbers
-    for project in projectSet.get_projects().values():
+    for project in project_set.get_projects().values():
         current_date = project.start_date
         while current_date <= project.end_date:
             projects_by_day[current_date].append(project.project_number)
@@ -58,9 +70,9 @@ def init_projects_by_day_map(projectSet: ProjectSet):
     return projects_by_day
 
 
-def calculate_reimbursement(projectSet: ProjectSet) -> int:
-    projects_by_day = init_projects_by_day_map(projectSet)
-    rate_by_day = {}
+def calculate_reimbursement(project_set: ProjectSet) -> int:
+    projects_by_day = init_projects_by_day_map(project_set)
+    rate_by_day: Dict[datetime, int] = {}
 
     for date, projects in projects_by_day.items():
         # don't overwrite rate if already set
@@ -78,7 +90,7 @@ def calculate_reimbursement(projectSet: ProjectSet) -> int:
             if yesterday in projects_by_day and len(projects_by_day[yesterday]) != 0:
                 # there could be more than one project ending on same day
                 rate_by_day[yesterday] = get_highest_travel_day_rate(
-                    projectSet, projects_by_day[yesterday]
+                    project_set, projects_by_day[yesterday]
                 )
 
             # if there are any projects tomorrow, set rate to be a travel day
@@ -86,16 +98,19 @@ def calculate_reimbursement(projectSet: ProjectSet) -> int:
             if tomorrow in projects_by_day and len(projects_by_day[tomorrow]) != 0:
                 # there could be more than one project ending on same day
                 rate_by_day[tomorrow] = get_highest_travel_day_rate(
-                    projectSet, projects_by_day[tomorrow]
+                    project_set, projects_by_day[tomorrow]
                 )
 
         # date has a single project
         elif number_of_projects == 1:
             project_number = projects[0]
-            project = projectSet.get_project_by_number(project_number)
+            project = project_set.get_project_by_number(project_number)
 
             # first day and last day of the set is a travel day
-            if date == projectSet.get_start_date() or date == projectSet.get_end_date():
+            if (
+                date == project_set.get_start_date()
+                or date == project_set.get_end_date()
+            ):
                 rate_by_day[date] = get_travel_rate_for_city_type(project.city_cost)
             else:
                 # it must be a full day
@@ -104,7 +119,7 @@ def calculate_reimbursement(projectSet: ProjectSet) -> int:
         # date has multiple overlapping projects
         else:
             # overlap results in full day at the highest rate
-            rate_by_day[date] = get_highest_full_day_rate(projectSet, projects)
+            rate_by_day[date] = get_highest_full_day_rate(project_set, projects)
 
     for date, rate in rate_by_day.items():
         print(f"date: {str(date)}, rate: {rate}")

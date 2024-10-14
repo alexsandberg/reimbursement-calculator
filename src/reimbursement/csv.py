@@ -1,10 +1,8 @@
 import pandas as pd
-from pandas import DataFrame
-
 import sys
 
 
-def read_csv(file_path: str) -> DataFrame:
+def read_csv(file_path: str) -> pd.DataFrame:
     data = None
     try:
         data = pd.read_csv(file_path)
