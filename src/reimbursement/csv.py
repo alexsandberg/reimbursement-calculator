@@ -3,6 +3,7 @@ from pandas import DataFrame
 
 import sys
 
+
 def read_csv(file_path: str) -> DataFrame:
     data = None
     try:
