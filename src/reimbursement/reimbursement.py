@@ -1,17 +1,11 @@
 from datetime import datetime, timedelta
-from enum import Enum
 from typing import List, Dict
-from src.reimbursement.project import ProjectSet
+from src.reimbursement.project import CityCost, ProjectSet
 
 LOW_COST_TRAVEL_RATE = 45
 HIGH_COST_TRAVEL_RATE = 55
 LOW_COST_FULL_RATE = 75
 HIGH_COST_FULL_RATE = 85
-
-
-class CityCost(Enum):
-    HIGH = "high"
-    LOW = "low"
 
 
 def is_low_cost_city(city_cost: CityCost) -> bool:

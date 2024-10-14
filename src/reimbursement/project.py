@@ -1,7 +1,12 @@
 from datetime import datetime
+from enum import Enum
 from pandas import DataFrame
-from src.reimbursement.reimbursement import CityCost
 from typing import Dict
+
+
+class CityCost(Enum):
+    HIGH = "high"
+    LOW = "low"
 
 
 class Project:
