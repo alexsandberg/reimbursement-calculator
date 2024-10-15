@@ -15,7 +15,7 @@ def main():
         data_frame = read_csv(csv_file_path)
         project_set = load_data_to_project_set(data_frame)
         total = calculate_reimbursement(project_set)
-        print(f"total reimbursement: {total}")
+        print(f"total reimbursement: ${total}")
 
 
 if __name__ == "__main__":

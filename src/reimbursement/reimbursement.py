@@ -132,7 +132,7 @@ def calculate_reimbursement(project_set: ProjectSet) -> int:
 
     # print results of each day in the set
     for date, rate in rate_by_day.items():
-        print(f"date: {str(date)}, rate: {rate}")
+        print(f'date: {date.strftime("%m/%d/%Y")}, rate: ${rate}')
 
     # return summed reimbursement
     return sum(rate_by_day.values())
