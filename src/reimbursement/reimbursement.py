@@ -73,15 +73,13 @@ def calculate_reimbursement(project_set: ProjectSet) -> int:
         if date in rate_by_day:
             continue
 
-        number_of_projects = len(projects)
-
         # date is a gap day
-        if number_of_projects == 0:
+        if len(projects) == 0:
             rate_by_day[date] = 0
 
             # if there were any projects yesterday, update rate to be a travel day
             yesterday = date - timedelta(days=1)
-            if yesterday in projects_by_day and len(projects_by_day[yesterday]) != 0:
+            if yesterday in projects_by_day and len(projects_by_day[yesterday]) > 0:
                 # there could be more than one project ending on same day
                 rate_by_day[yesterday] = get_highest_travel_day_rate(
                     project_set, projects_by_day[yesterday]
@@ -89,31 +87,22 @@ def calculate_reimbursement(project_set: ProjectSet) -> int:
 
             # if there are any projects tomorrow, set rate to be a travel day
             tomorrow = date + timedelta(days=1)
-            if tomorrow in projects_by_day and len(projects_by_day[tomorrow]) != 0:
-                # there could be more than one project ending on same day
+            if tomorrow in projects_by_day and len(projects_by_day[tomorrow]) > 0:
+                # there could be more than one project starting on same day
                 rate_by_day[tomorrow] = get_highest_travel_day_rate(
                     project_set, projects_by_day[tomorrow]
                 )
 
-        # date has a single project
-        elif number_of_projects == 1:
-            project_number = projects[0]
-            project = project_set.get_project_by_number(project_number)
-
+        else:
             # first day and last day of the set is a travel day
             if (
                 date == project_set.get_start_date()
                 or date == project_set.get_end_date()
             ):
-                rate_by_day[date] = get_travel_rate_for_city_type(project.city_cost)
+                rate_by_day[date] = get_highest_travel_day_rate(project_set, projects)
             else:
                 # it must be a full day
-                rate_by_day[date] = get_full_rate_for_city_type(project.city_cost)
-
-        # date has multiple overlapping projects
-        else:
-            # overlap results in full day at the highest rate
-            rate_by_day[date] = get_highest_full_day_rate(project_set, projects)
+                rate_by_day[date] = get_highest_full_day_rate(project_set, projects)
 
     for date, rate in rate_by_day.items():
         print(f"date: {str(date)}, rate: {rate}")
