@@ -58,11 +58,7 @@ class ProjectSet:
 def load_data_to_project_set(data_frame: DataFrame) -> ProjectSet:
     project_set = ProjectSet()
     for _, row in data_frame.iterrows():
-        # TODO: error handling
-        project_number = int(row["project_number"])
-        city_cost = row["city_cost"]
-        start_date = datetime.strptime(row["start_date"], "%m/%d/%y")
-        end_date = datetime.strptime(row["end_date"], "%m/%d/%y")
-        project = Project(project_number, city_cost, start_date, end_date)
-        project_set.add_project(project)
+        project_set.add_project(
+            Project(row.project_number, row.city_cost, row.start_date, row.end_date)
+        )
     return project_set
