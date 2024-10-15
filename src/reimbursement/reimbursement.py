@@ -44,7 +44,7 @@ def get_highest_rate_by_type(
     highest_rate = 0
     for project_number in project_numbers:
         project = project_set.get_project_by_number(project_number)
-        rate = get_rate_by_rate_type_and_city_type(rate_type, project.city_cost)
+        rate = get_rate_by_rate_type_and_city_type(rate_type, project.get_city_cost())
         highest_rate = max(highest_rate, rate)
     return highest_rate
 
@@ -61,9 +61,9 @@ def init_projects_by_day_map(project_set: ProjectSet) -> Dict[datetime, List[int
 
     # mark each day with project numbers
     for project in project_set.get_projects().values():
-        current_date = project.start_date
-        while current_date <= project.end_date:
-            projects_by_day[current_date].append(project.project_number)
+        current_date = project.get_start_date()
+        while current_date <= project.get_end_date():
+            projects_by_day[current_date].append(project.get_project_number())
             current_date += timedelta(days=1)
     return projects_by_day
 

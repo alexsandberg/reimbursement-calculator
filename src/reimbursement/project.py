@@ -22,7 +22,17 @@ class Project:
         self.start_date = start_date
         self.end_date = end_date
 
-    # TODO: add getter methods
+    def get_project_number(self):
+        return self.project_number
+
+    def get_city_cost(self):
+        return self.city_cost
+
+    def get_start_date(self):
+        return self.start_date
+
+    def get_end_date(self):
+        return self.end_date
 
 
 class ProjectSet:
@@ -32,15 +42,15 @@ class ProjectSet:
         self.end_date = None
 
     def add_project(self, project: Project):
-        self.projects[project.project_number] = project
+        self.projects[project.get_project_number()] = project
 
         # update set start_date if project start_date is earliest in set
-        if self.start_date is None or project.start_date < self.start_date:
-            self.start_date = project.start_date
+        if self.start_date is None or project.get_start_date() < self.start_date:
+            self.start_date = project.get_start_date()
 
         # update set end_date if project end_date is latest in set
-        if self.end_date is None or project.end_date > self.end_date:
-            self.end_date = project.end_date
+        if self.end_date is None or project.get_end_date() > self.end_date:
+            self.end_date = project.get_end_date()
 
     def get_projects(self) -> Dict[int, Project]:
         return self.projects
