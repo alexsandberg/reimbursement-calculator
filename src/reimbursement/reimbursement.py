@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from enum import Enum
 from typing import List, Dict
 from src.reimbursement.project import CityCost, ProjectSet
 
@@ -6,6 +7,11 @@ LOW_COST_TRAVEL_RATE = 45
 HIGH_COST_TRAVEL_RATE = 55
 LOW_COST_FULL_RATE = 75
 HIGH_COST_FULL_RATE = 85
+
+
+class RateType(Enum):
+    FULL = "full"
+    TRAVEL = "travel"
 
 
 def is_low_cost_city(city_cost: CityCost) -> bool:
@@ -22,25 +28,23 @@ def get_full_rate_for_city_type(city_cost: CityCost) -> int:
     return LOW_COST_FULL_RATE if is_low_cost_city(city_cost) else HIGH_COST_FULL_RATE
 
 
-def get_highest_full_day_rate(
-    project_set: ProjectSet, project_numbers: List[int]
+def get_rate_by_rate_type_and_city_type(
+    rate_type: RateType, city_cost: CityCost
+) -> int:
+    return (
+        get_full_rate_for_city_type(city_cost)
+        if rate_type == RateType.FULL
+        else get_travel_rate_for_city_type(city_cost)
+    )
+
+
+def get_highest_rate_by_type(
+    project_set: ProjectSet, project_numbers: List[int], rate_type: RateType
 ) -> int:
     highest_rate = 0
     for project_number in project_numbers:
         project = project_set.get_project_by_number(project_number)
-        rate = get_full_rate_for_city_type(project.city_cost)
-        highest_rate = max(highest_rate, rate)
-    return highest_rate
-
-
-# repetitive code: refactor to combine with get_highest_full_day_rate
-def get_highest_travel_day_rate(
-    project_set: ProjectSet, project_numbers: List[int]
-) -> int:
-    highest_rate = 0
-    for project_number in project_numbers:
-        project = project_set.get_project_by_number(project_number)
-        rate = get_travel_rate_for_city_type(project.city_cost)
+        rate = get_rate_by_rate_type_and_city_type(rate_type, project.city_cost)
         highest_rate = max(highest_rate, rate)
     return highest_rate
 
@@ -81,28 +85,30 @@ def calculate_reimbursement(project_set: ProjectSet) -> int:
             yesterday = date - timedelta(days=1)
             if yesterday in projects_by_day and len(projects_by_day[yesterday]) > 0:
                 # there could be more than one project ending on same day
-                rate_by_day[yesterday] = get_highest_travel_day_rate(
-                    project_set, projects_by_day[yesterday]
+                rate_by_day[yesterday] = get_highest_rate_by_type(
+                    project_set, projects_by_day[yesterday], RateType.TRAVEL
                 )
 
             # if there are any projects tomorrow, set rate to be a travel day
             tomorrow = date + timedelta(days=1)
             if tomorrow in projects_by_day and len(projects_by_day[tomorrow]) > 0:
                 # there could be more than one project starting on same day
-                rate_by_day[tomorrow] = get_highest_travel_day_rate(
-                    project_set, projects_by_day[tomorrow]
+                rate_by_day[tomorrow] = get_highest_rate_by_type(
+                    project_set, projects_by_day[tomorrow], RateType.TRAVEL
                 )
 
         else:
-            # first day and last day of the set is a travel day
-            if (
-                date == project_set.get_start_date()
+            # first day and last day of the set is a travel day, otherwise it's a full day
+            rate_type = (
+                RateType.TRAVEL
+                if date == project_set.get_start_date()
                 or date == project_set.get_end_date()
-            ):
-                rate_by_day[date] = get_highest_travel_day_rate(project_set, projects)
-            else:
-                # it must be a full day
-                rate_by_day[date] = get_highest_full_day_rate(project_set, projects)
+                else RateType.FULL
+            )
+
+            rate_by_day[date] = get_highest_rate_by_type(
+                project_set, projects, rate_type
+            )
 
     for date, rate in rate_by_day.items():
         print(f"date: {str(date)}, rate: {rate}")
