@@ -1,10 +1,12 @@
-from datetime import datetime
-import pandas as pd
 import sys
+from datetime import datetime
+
+import pandas as pd
 from src.reimbursement.project import CityCost
 
 
 def validate_project_number(project_number: str) -> int:
+    """Vaidates that project_number is an integer."""
     project_number_int = None
 
     try:
@@ -16,6 +18,7 @@ def validate_project_number(project_number: str) -> int:
 
 
 def convert_to_city_cost_enum(city_cost: str) -> CityCost:
+    """Validates city_cost and converts to CityCost enum value."""
     try:
         return CityCost(city_cost)
     except ValueError as exc:
@@ -23,6 +26,7 @@ def convert_to_city_cost_enum(city_cost: str) -> CityCost:
 
 
 def convert_datestr_to_datetime(datestr: str) -> datetime:
+    """Validates start_date or end_date and converts to datetime object."""
     try:
         return datetime.strptime(datestr, "%m/%d/%y")
     except ValueError as exc:
@@ -30,9 +34,9 @@ def convert_datestr_to_datetime(datestr: str) -> datetime:
 
 
 def read_csv(file_path: str) -> pd.DataFrame:
+    """Reads project set data from csv with data validation and conversion."""
     data = None
     try:
-        # validate types and parse dates
         data = pd.read_csv(
             file_path,
             converters={

@@ -1,7 +1,8 @@
 from datetime import datetime
 from enum import Enum
-from pandas import DataFrame
 from typing import Dict
+
+from pandas import DataFrame
 
 
 class CityCost(Enum):
@@ -42,6 +43,11 @@ class ProjectSet:
         self.end_date = None
 
     def add_project(self, project: Project):
+        """
+        Adds a project to the set.
+        Projects are stored as a dictionary that maps
+        the project number to the Project instance.
+        """
         self.projects[project.get_project_number()] = project
 
         # update set start_date if project start_date is earliest in set
@@ -66,6 +72,7 @@ class ProjectSet:
 
 
 def load_data_to_project_set(data_frame: DataFrame) -> ProjectSet:
+    """Loads Pandas DataFrame from csv as a new ProjectSet instance."""
     project_set = ProjectSet()
     for _, row in data_frame.iterrows():
         project_set.add_project(

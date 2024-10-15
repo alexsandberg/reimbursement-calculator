@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import List, Dict
+
 from src.reimbursement.project import CityCost, ProjectSet
 
 LOW_COST_TRAVEL_RATE = 45
@@ -31,6 +32,10 @@ def get_full_rate_for_city_type(city_cost: CityCost) -> int:
 def get_rate_by_rate_type_and_city_type(
     rate_type: RateType, city_cost: CityCost
 ) -> int:
+    """
+    Returns the day rate based on rate type (full or travel)
+    and city type (high or low cost)
+    """
     return (
         get_full_rate_for_city_type(city_cost)
         if rate_type == RateType.FULL
@@ -41,6 +46,10 @@ def get_rate_by_rate_type_and_city_type(
 def get_highest_rate_by_type(
     project_set: ProjectSet, project_numbers: List[int], rate_type: RateType
 ) -> int:
+    """
+    Given a rate type (full or travel) and a list of project numbers for a specific day
+    returns the highest rate for that day
+    """
     highest_rate = 0
     for project_number in project_numbers:
         project = project_set.get_project_by_number(project_number)
@@ -49,8 +58,11 @@ def get_highest_rate_by_type(
     return highest_rate
 
 
-# dictionary that maps each day in the set to a list of projects on that day
-def init_projects_by_day_map(project_set: ProjectSet) -> Dict[datetime, List[int]]:
+def get_projects_by_day_map(project_set: ProjectSet) -> Dict[datetime, List[int]]:
+    """
+    Returns a dictionary that maps every date in the full project set
+    to a list of active project numbers for that day
+    """
     projects_by_day = {}
     current_date = project_set.get_start_date()
 
@@ -59,7 +71,7 @@ def init_projects_by_day_map(project_set: ProjectSet) -> Dict[datetime, List[int
         projects_by_day[current_date] = []
         current_date += timedelta(days=1)
 
-    # mark each day with project numbers
+    # mark each day in the set with project numbers active on that day
     for project in project_set.get_projects().values():
         current_date = project.get_start_date()
         while current_date <= project.get_end_date():
@@ -69,7 +81,15 @@ def init_projects_by_day_map(project_set: ProjectSet) -> Dict[datetime, List[int
 
 
 def calculate_reimbursement(project_set: ProjectSet) -> int:
-    projects_by_day = init_projects_by_day_map(project_set)
+    """
+    Calculates reimbursement for the project set
+    by iterating over every day in the set and determining the rate for that day
+    """
+
+    # mapping of each day in set to a list of project numbers for that day
+    projects_by_day: Dict[datetime, List[int]] = get_projects_by_day_map(project_set)
+
+    # stores the rate for each day in set
     rate_by_day: Dict[datetime, int] = {}
 
     for date, projects in projects_by_day.items():
@@ -110,6 +130,7 @@ def calculate_reimbursement(project_set: ProjectSet) -> int:
                 project_set, projects, rate_type
             )
 
+    # print results of each day in the set
     for date, rate in rate_by_day.items():
         print(f"date: {str(date)}, rate: {rate}")
 
